@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechByZaier — Apprentissage Interactif</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0d0f14; --surface:#161a22; --surface2:#1e2330; --border:#2a3045;
+    --accent:#4fffb0; --accent2:#4fa8ff; --danger:#ff5f7e; --warn:#ffaa4f;
+    --text:#e8eaf2; --muted:#6b7494; --radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 80% 10%,rgba(79,255,176,.06) 0%,transparent 60%),radial-gradient(ellipse 50% 50% at 10% 80%,rgba(79,168,255,.05) 0%,transparent 60%);pointer-events:none;z-index:0;}
+
+  /* LOADING */
+  #app-loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;}
+  .spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;}
+  .loading-logo span{color:var(--accent);}
+
+  header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);background:rgba(13,15,20,.9);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;letter-spacing:-.5px;}
+  .logo span{color:var(--accent);}
+  .header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .user-chip{display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:6px 13px;font-size:.83rem;}
+  .user-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);}
+  .notif-btn{position:relative;background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;padding:4px;}
+  .notif-btn:hover{color:var(--accent);}
+  .notif-badge{position:absolute;top:-3px;right:-3px;background:var(--danger);color:#fff;font-size:.58rem;font-weight:700;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .role-tabs{display:flex;gap:4px;background:var(--surface);padding:4px;border-radius:26px;border:1px solid var(--border);}
+  .role-tab{padding:7px 18px;border-radius:20px;border:none;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .22s;background:transparent;color:var(--muted);}
+  .role-tab.active{background:var(--accent);color:#0d0f14;font-weight:700;}
+
+  .app{position:relative;z-index:1;}
+  .view{display:none;animation:fadeIn .3s ease;}
+  .view.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .container{max-width:960px;margin:0 auto;padding:30px 22px;}
+
+  .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:38px;width:100%;max-width:410px;text-align:center;}
+  .login-icon{font-size:2.6rem;margin-bottom:14px;}
+  .login-card h2{font-family:'Syne',sans-serif;font-weight:700;font-size:1.45rem;margin-bottom:5px;}
+  .login-card p{color:var(--muted);font-size:.86rem;margin-bottom:26px;}
+  .login-tabs{display:flex;background:var(--surface2);border-radius:9px;padding:4px;margin-bottom:22px;}
+  .login-tab{flex:1;padding:8px;border-radius:7px;border:none;font-family:'DM Sans',sans-serif;font-size:.83rem;cursor:pointer;transition:all .2s;background:transparent;color:var(--muted);font-weight:500;}
+  .login-tab.active{background:var(--accent);color:#0d0f14;font-weight:700;}
+
+  .section-title{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;margin-bottom:5px;}
+  .section-sub{color:var(--muted);font-size:.86rem;margin-bottom:26px;}
+  .card-label{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;}
+
+  input[type="text"],input[type="url"],input[type="password"],textarea,select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.86rem;outline:none;transition:border-color .2s;margin-bottom:10px;}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);}
+  textarea{resize:vertical;min-height:70px;}
+  select{appearance:none;cursor:pointer;}
+  label{font-size:.8rem;color:var(--muted);display:block;margin-bottom:5px;}
+
+  .btn{padding:10px 20px;border-radius:9px;border:none;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.86rem;cursor:pointer;transition:all .2s;}
+  .btn-primary{background:var(--accent);color:#0d0f14;}
+  .btn-primary:hover{background:#2de89a;transform:translateY(-1px);}
+  .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+  .btn-secondary:hover{border-color:var(--accent2);color:var(--accent2);}
+  .btn-danger{background:rgba(255,95,126,.1);color:var(--danger);border:1px solid rgba(255,95,126,.22);}
+  .btn-danger:hover{background:rgba(255,95,126,.2);}
+  .btn-sm{padding:5px 12px;font-size:.76rem;border-radius:7px;}
+  .btn-full{width:100%;padding:12px;font-size:.93rem;border-radius:11px;margin-top:4px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
+  .stat-val{font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800;color:var(--accent);}
+  .stat-label{font-size:.73rem;color:var(--muted);margin-top:2px;}
+
+  .video-item{display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:13px 16px;margin-bottom:10px;transition:border-color .2s;}
+  .video-item:hover{border-color:var(--accent2);}
+  .video-thumb{width:60px;height:40px;background:var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+  .video-info{flex:1;min-width:0;}
+  .video-title{font-weight:600;font-size:.9rem;}
+  .video-meta{font-size:.75rem;color:var(--muted);margin-top:2px;}
+
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:16px;font-size:.71rem;font-weight:600;white-space:nowrap;}
+  .badge-green{background:rgba(79,255,176,.12);color:var(--accent);}
+  .badge-blue{background:rgba(79,168,255,.12);color:var(--accent2);}
+  .badge-orange{background:rgba(255,170,79,.12);color:var(--warn);}
+  .badge-red{background:rgba(255,95,126,.12);color:var(--danger);}
+
+  .qcm-question{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:16px;margin-bottom:11px;position:relative;}
+  .qcm-question .q-number{font-family:'Syne',sans-serif;font-weight:700;font-size:.7rem;color:var(--accent2);letter-spacing:1px;margin-bottom:8px;}
+  .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;}
+  .option-row{display:flex;align-items:center;gap:6px;}
+  .option-row input[type="text"]{margin-bottom:0;flex:1;}
+  .correct-radio{accent-color:var(--accent);width:14px;height:14px;cursor:pointer;flex-shrink:0;}
+  .correct-hint{font-size:.7rem;color:var(--muted);margin-top:6px;}
+  .remove-q{position:absolute;top:11px;right:11px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.95rem;transition:color .2s;}
+  .remove-q:hover{color:var(--danger);}
+
+  /* UPLOAD */
+  .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:30px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);margin-bottom:10px;}
+  .upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(79,255,176,.05);}
+  .upload-zone input[type="file"]{display:none;}
+  .upload-icon{font-size:2rem;margin-bottom:8px;}
+  .upload-label{font-size:.86rem;color:var(--muted);}
+  .upload-label strong{color:var(--accent);}
+  .upload-preview{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:10px;}
+  .upload-preview-name{font-size:.86rem;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .upload-preview-size{font-size:.76rem;color:var(--muted);}
+  .upload-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;}
+  .upload-remove:hover{color:var(--danger);}
+
+  /* PROGRESS */
+  .upload-progress-wrap{background:var(--border);border-radius:4px;height:6px;margin-top:10px;overflow:hidden;}
+  .upload-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:4px;transition:width .3s;width:0%;}
+  .upload-status{font-size:.78rem;color:var(--muted);margin-top:6px;text-align:center;}
+
+  .responses-table{width:100%;border-collapse:collapse;}
+  .responses-table th{text-align:left;font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:9px 12px;border-bottom:1px solid var(--border);}
+  .responses-table td{padding:11px 12px;border-bottom:1px solid rgba(42,48,69,.5);font-size:.83rem;vertical-align:middle;}
+  .responses-table tr:hover td{background:rgba(255,255,255,.02);}
+  .score-bar{width:65px;height:4px;background:var(--border);border-radius:3px;display:inline-block;margin-right:6px;vertical-align:middle;}
+  .score-fill{height:100%;border-radius:3px;background:var(--accent);}
+
+  .video-player-box{background:#000;border-radius:var(--radius);overflow:hidden;aspect-ratio:16/9;margin-bottom:20px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);}
+  .video-player-box video,.video-player-box iframe{width:100%;height:100%;border:none;outline:none;}
+  .video-placeholder{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted);}
+  .play-icon{width:56px;height:56px;border-radius:50%;background:rgba(79,255,176,.1);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
+
+  .qcm-quiz-q{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:18px;margin-bottom:11px;transition:border-color .2s;}
+  .qcm-quiz-q.answered{border-color:var(--accent);}
+  .quiz-q-text{font-weight:600;margin-bottom:11px;font-size:.9rem;}
+  .quiz-options{display:flex;flex-direction:column;gap:6px;}
+  .quiz-option{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .18s;font-size:.84rem;}
+  .quiz-option:hover{border-color:var(--accent2);background:rgba(79,168,255,.05);}
+  .quiz-option.selected{border-color:var(--accent);background:rgba(79,255,176,.07);color:var(--accent);}
+  .option-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all .18s;display:flex;align-items:center;justify-content:center;}
+  .quiz-option.selected .option-dot{border-color:var(--accent);background:var(--accent);}
+  .option-dot::after{content:'';width:5px;height:5px;border-radius:50%;background:#0d0f14;opacity:0;}
+  .quiz-option.selected .option-dot::after{opacity:1;}
+  .progress-bar-wrap{background:var(--border);border-radius:4px;height:4px;margin-bottom:22px;}
+  .progress-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .4s;}
+
+  .success-box{text-align:center;padding:50px 26px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);}
+  .success-icon{font-size:3rem;margin-bottom:13px;}
+  .success-box h2{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:700;margin-bottom:8px;}
+  .success-score{font-size:2.8rem;font-weight:800;color:var(--accent);font-family:'Syne',sans-serif;}
+
+  .leaderboard-row{display:flex;align-items:center;gap:13px;padding:12px 16px;border-radius:11px;margin-bottom:7px;background:var(--surface2);border:1px solid var(--border);transition:border-color .2s;}
+  .leaderboard-row:hover{border-color:var(--accent2);}
+  .rank-num{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;width:30px;text-align:center;flex-shrink:0;}
+  .rank-1{color:#ffd700}.rank-2{color:#c0c0c0}.rank-3{color:#cd7f32}.rank-other{color:var(--muted)}
+  .lb-avatar{width:34px;height:34px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;flex-shrink:0;}
+  .lb-name{flex:1;font-weight:600;font-size:.9rem;}
+  .lb-class{font-size:.73rem;color:var(--muted);}
+  .lb-score{font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);font-size:.95rem;}
+  .lb-bar{width:90px;height:4px;background:var(--border);border-radius:3px;}
+  .lb-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent2),var(--accent));}
+
+  .notif-panel{position:fixed;top:64px;right:18px;width:300px;background:var(--surface);border:1px solid var(--border);border-radius:13px;z-index:200;box-shadow:0 18px 55px rgba(0,0,0,.5);display:none;animation:fadeIn .2s ease;}
+  .notif-panel.open{display:block;}
+  .notif-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+  .notif-header span{font-family:'Syne',sans-serif;font-weight:700;font-size:.87rem;}
+  .notif-item{padding:11px 16px;border-bottom:1px solid rgba(42,48,69,.5);font-size:.8rem;display:flex;gap:9px;align-items:flex-start;cursor:pointer;transition:background .15s;}
+  .notif-item:hover{background:rgba(255,255,255,.03);}
+  .notif-item.unread{background:rgba(79,255,176,.04);}
+  .notif-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px;}
+  .notif-dot.read{background:var(--border);}
+  .notif-time{font-size:.7rem;color:var(--muted);margin-top:2px;}
+  .notif-empty{padding:26px;text-align:center;color:var(--muted);font-size:.83rem;}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:15px;padding:28px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;animation:fadeIn .22s ease;}
+  .modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:16px;}
+  .modal-close{float:right;background:none;border:none;color:var(--muted);font-size:1.15rem;cursor:pointer;}
+  .answer-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border);font-size:.83rem;gap:11px;}
+  .answer-correct{color:var(--accent);font-weight:600;flex-shrink:0;}
+  .answer-wrong{color:var(--danger);font-weight:600;flex-shrink:0;}
+
+  .inner-tabs{display:flex;gap:4px;background:var(--surface2);padding:4px;border-radius:10px;margin-bottom:20px;border:1px solid var(--border);width:fit-content;flex-wrap:wrap;}
+  .inner-tab{padding:6px 16px;border-radius:7px;border:none;font-family:'DM Sans',sans-serif;font-size:.8rem;cursor:pointer;transition:all .2s;background:transparent;color:var(--muted);}
+  .inner-tab.active{background:var(--surface);color:var(--text);font-weight:600;border:1px solid var(--border);}
+
+  .class-tag{display:inline-flex;align-items:center;background:rgba(79,168,255,.1);color:var(--accent2);border-radius:14px;padding:2px 9px;font-size:.72rem;font-weight:600;margin-left:5px;}
+  .error-msg{color:var(--danger);font-size:.79rem;margin-bottom:8px;display:none;}
+  .firebase-status{display:flex;align-items:center;gap:6px;font-size:.75rem;padding:4px 10px;border-radius:20px;background:rgba(79,255,176,.1);color:var(--accent);border:1px solid rgba(79,255,176,.2);}
+  .firebase-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .video-source-tabs{display:flex;gap:4px;background:var(--surface2);padding:4px;border-radius:9px;margin-bottom:12px;flex-wrap:wrap;}
+  .vsrc-tab{flex:1;padding:7px 10px;border-radius:7px;border:none;font-family:'DM Sans',sans-serif;font-size:.78rem;cursor:pointer;transition:all .2s;background:transparent;color:var(--muted);font-weight:500;white-space:nowrap;}
+  .vsrc-tab.active{background:var(--accent);color:#0d0f14;font-weight:700;}
+  @media(max-width:640px){.stats-row{grid-template-columns:1fr 1fr;}header{padding:11px 14px;}.container{padding:18px 12px;}.options-grid{grid-template-columns:1fr;}.video-source-tabs{gap:3px;}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="app-loading">
+  <div class="loading-logo">Tech<span>ByZaier</span></div>
+  <div class="spinner"></div>
+  <div style="color:var(--muted);font-size:.83rem">Connexion à Firebase…</div>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-screen" style="display:none">
+  <div class="login-card">
+    <div class="login-icon">🎓</div>
+    <h2>TechByZaier</h2>
+    <p>Connectez-vous pour accéder à votre espace</p>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginRole('student',this)">Élève</button>
+      <button class="login-tab" onclick="switchLoginRole('teacher',this)">Professeur</button>
+    </div>
+    <div id="student-login-form">
+      <label>Prénom et Nom</label>
+      <input type="text" id="login-name" placeholder="Ex: Amira Bensalem">
+      <label>Code de classe</label>
+      <input type="text" id="login-code" placeholder="Ex: BIO2025" style="text-transform:uppercase">
+      <div class="error-msg" id="login-error"></div>
+      <button class="btn btn-primary btn-full" onclick="loginStudent()">Entrer dans la classe →</button>
+    </div>
+    <div id="teacher-login-form" style="display:none">
+      <label>Mot de passe professeur</label>
+      <input type="password" id="teacher-password" placeholder="••••••••">
+      <div class="error-msg" id="teacher-error"></div>
+      <button class="btn btn-primary btn-full" onclick="loginTeacher()">Accéder au tableau de bord →</button>
+      <p style="font-size:.73rem;color:var(--muted);margin-top:10px;">Mot de passe : <strong style="color:var(--accent)">prof123</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" style="display:none">
+<header>
+  <div class="logo">Tech<span>ByZaier</span></div>
+  <div class="header-right">
+    <div class="firebase-status"><div class="firebase-dot"></div>Firebase connecté</div>
+    <div class="user-chip" id="header-chip"><div class="user-dot"></div><span id="header-username">—</span></div>
+    <button class="notif-btn" id="notif-btn" onclick="toggleNotifications()" style="display:none">
+      🔔<span class="notif-badge" id="notif-badge" style="display:none">0</span>
+    </button>
+    <div class="role-tabs" id="role-tabs-header" style="display:none">
+      <button class="role-tab active" onclick="switchView('teacher')">👩‍🏫 Prof</button>
+      <button class="role-tab" onclick="switchView('leaderboard')">🏆 Classement</button>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="logout()">Déconnexion</button>
+  </div>
+</header>
+
+<!-- Notif Panel -->
+<div class="notif-panel" id="notif-panel">
+  <div class="notif-header">
+    <span>🔔 Notifications</span>
+    <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.77rem" onclick="markAllRead()">Tout lire</button>
+  </div>
+  <div id="notif-list"><div class="notif-empty">Aucune notification</div></div>
+</div>
+
+<div class="app">
+
+  <!-- TEACHER -->
+  <div class="view active" id="view-teacher">
+    <div class="container">
+      <div class="inner-tabs">
+        <button class="inner-tab active" onclick="switchTeacherTab('tc',this)">➕ Créer</button>
+        <button class="inner-tab" onclick="switchTeacherTab('ta',this)">📋 Devoirs</button>
+        <button class="inner-tab" onclick="switchTeacherTab('tr',this)">📊 Réponses</button>
+        <button class="inner-tab" onclick="switchTeacherTab('tcl',this)">🏫 Classes</button>
+      </div>
+
+      <div id="tc">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-val" id="s-videos">—</div><div class="stat-label">Devoirs</div></div>
+          <div class="stat-card"><div class="stat-val" id="s-responses">—</div><div class="stat-label">Réponses</div></div>
+          <div class="stat-card"><div class="stat-val" id="s-avg">—</div><div class="stat-label">Score moyen</div></div>
+          <div class="stat-card"><div class="stat-val" id="s-students">—</div><div class="stat-label">Élèves</div></div>
+        </div>
+        <div class="section-title">Nouveau devoir</div>
+        <p class="section-sub">Uploadez une vidéo depuis votre PC et composez votre QCM</p>
+        <div class="card">
+          <div class="card-label">📹 Vidéo</div>
+          <label>Titre du devoir</label>
+          <input type="text" id="assign-title" placeholder="Ex: Cours sur la technologie">
+          <label>Source de la vidéo</label>
+          <div class="video-source-tabs">
+            <button class="vsrc-tab active" onclick="switchVSrc('upload',this)">📁 Upload PC</button>
+            <button class="vsrc-tab" onclick="switchVSrc('youtube',this)">▶ YouTube</button>
+            <button class="vsrc-tab" onclick="switchVSrc('drive',this)">📂 Google Drive</button>
+            <button class="vsrc-tab" onclick="switchVSrc('onedrive',this)">🔷 OneDrive</button>
+          </div>
+
+          <!-- Upload -->
+          <div id="vsrc-upload">
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('vfile').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+              <input type="file" id="vfile" accept="video/mp4,video/webm,video/ogg" onchange="handleFile(this.files[0])">
+              <div class="upload-icon">🎬</div>
+              <div class="upload-label">Glissez votre vidéo ici ou <strong>cliquez pour choisir</strong></div>
+              <div class="upload-label" style="font-size:.75rem;margin-top:4px">MP4, WebM, OGG — max 100 Mo</div>
+            </div>
+            <div id="upload-preview" style="display:none"></div>
+            <div id="upload-progress-wrap" style="display:none">
+              <div class="upload-progress-wrap"><div class="upload-progress-fill" id="upload-bar"></div></div>
+              <div class="upload-status" id="upload-status">Upload en cours…</div>
+            </div>
+          </div>
+
+          <!-- YouTube -->
+          <div id="vsrc-youtube" style="display:none">
+            <input type="url" id="yt-url" placeholder="https://www.youtube.com/watch?v=...">
+            <div style="font-size:.76rem;color:var(--muted)">Collez le lien de votre vidéo YouTube</div>
+          </div>
+
+          <!-- Google Drive -->
+          <div id="vsrc-drive" style="display:none">
+            <input type="url" id="drive-url" placeholder="https://drive.google.com/file/d/...">
+            <div style="font-size:.76rem;color:var(--muted)">📌 Dans Google Drive : clic droit sur la vidéo → <strong>Obtenir le lien</strong> → accès <strong>À tous</strong> → copiez</div>
+          </div>
+
+          <!-- OneDrive -->
+          <div id="vsrc-onedrive" style="display:none">
+            <input type="url" id="onedrive-url" placeholder="https://onedrive.live.com/...">
+            <div style="font-size:.76rem;color:var(--muted)">📌 Dans OneDrive : clic droit sur la vidéo → <strong>Partager</strong> → <strong>Copier le lien</strong></div>
+          </div>
+          <label style="margin-top:4px">Classe cible (code) — laisser vide = toutes</label>
+          <input type="text" id="assign-class" placeholder="Ex: TECH2025" style="text-transform:uppercase">
+        </div>
+        <div class="card">
+          <div class="card-label">❓ Questions QCM</div>
+          <div id="questions-list"></div>
+          <button class="btn btn-secondary" onclick="addQuestion()">+ Ajouter une question</button>
+        </div>
+        <div style="text-align:right;margin-bottom:36px">
+          <button class="btn btn-primary" id="publish-btn" onclick="publishAssignment()">🚀 Publier le devoir</button>
+        </div>
+      </div>
+
+      <div id="ta" style="display:none">
+        <div class="section-title">Devoirs publiés</div>
+        <p class="section-sub">Gérez vos devoirs</p>
+        <div id="ta-list"><div style="color:var(--muted);text-align:center;padding:30px">Chargement…</div></div>
+      </div>
+
+      <div id="tr" style="display:none">
+        <div class="section-title">Réponses des élèves</div>
+        <p class="section-sub">Approuvez ou refusez les soumissions</p>
+        <div id="tr-container"><div style="color:var(--muted);text-align:center;padding:30px">Chargement…</div></div>
+      </div>
+
+      <div id="tcl" style="display:none">
+        <div class="section-title">Gestion des classes</div>
+        <p class="section-sub">Créez des classes avec codes d'accès</p>
+        <div class="card">
+          <div class="card-label">➕ Nouvelle classe</div>
+          <label>Nom de la classe</label>
+          <input type="text" id="class-name" placeholder="Ex: 3ème — Technologie">
+          <label>Code d'accès (unique)</label>
+          <input type="text" id="class-code" placeholder="Ex: TECH2025" style="text-transform:uppercase">
+          <button class="btn btn-primary" onclick="createClass()">Créer la classe</button>
+        </div>
+        <div id="classes-list"><div style="color:var(--muted);text-align:center;padding:20px">Chargement…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="view" id="view-leaderboard">
+    <div class="container">
+      <div class="section-title">🏆 Classement</div>
+      <p class="section-sub">Scores moyens de tous les élèves</p>
+      <div class="card" style="margin-bottom:14px">
+        <label>Filtrer par classe</label>
+        <select id="lb-filter" onchange="renderLeaderboard()"><option value="">Toutes les classes</option></select>
+      </div>
+      <div id="lb-list"></div>
+    </div>
+  </div>
+
+  <!-- STUDENT -->
+  <div class="view" id="view-student">
+    <div class="container">
+      <div id="student-home">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px">
+          <div><div class="section-title">Mes devoirs</div><p class="section-sub" style="margin-bottom:0">Regardez la vidéo puis répondez</p></div>
+          <button class="btn btn-secondary btn-sm" onclick="switchView('leaderboard')">🏆 Classement</button>
+        </div>
+        <div id="student-list"><div style="color:var(--muted);text-align:center;padding:30px">Chargement…</div></div>
+      </div>
+      <div id="student-quiz-area" style="display:none">
+        <button class="btn btn-secondary btn-sm" onclick="backToStudentHome()" style="margin-bottom:16px">← Retour</button>
+        <div class="video-player-box" id="video-box">
+          <div class="video-placeholder"><div class="play-icon">▶</div><p>Chargement vidéo…</p></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div class="section-title" style="margin-bottom:0;font-size:1rem" id="quiz-ttl">QCM</div>
+          <span id="quiz-prog-lbl" style="color:var(--muted);font-size:.8rem"></span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="quiz-prog-bar" style="width:0%"></div></div>
+        <div id="quiz-qs"></div>
+        <div style="text-align:right;margin-top:16px">
+          <button class="btn btn-primary" onclick="submitQuiz()">✅ Soumettre mes réponses</button>
+        </div>
+      </div>
+      <div id="student-success" style="display:none">
+        <div class="success-box">
+          <div class="success-icon">🎉</div>
+          <h2>Devoir soumis !</h2>
+          <p style="color:var(--muted);margin-bottom:16px">Votre professeur examinera vos réponses.</p>
+          <div class="success-score" id="suc-score"></div>
+          <p style="color:var(--muted);margin-top:6px;font-size:.85rem">Votre score</p>
+          <button class="btn btn-secondary" style="margin-top:22px" onclick="backToStudentHome()">Retour à mes devoirs</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">✕</button>
+    <div class="modal-title" id="modal-ttl"></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, addDoc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+// Firebase Storage remplacé par Cloudinary
+
+// ══════ FIREBASE CONFIG ══════
+const firebaseConfig = {
+  apiKey: "AIzaSyBoub91lWgT_snMrx6GYXJUxJ9FJSDwCDI",
+  authDomain: "techbyzaier.firebaseapp.com",
+  projectId: "techbyzaier",
+  storageBucket: "techbyzaier.firebasestorage.app",
+  messagingSenderId: "120518059854",
+  appId: "1:120518059854:web:b03032e065ae7c2b95e01f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+// Cloudinary config
+const CLOUD_NAME = "dulbohvga";
+const API_KEY = "258788796444929";
+const API_SECRET = "Wa8lStOxvRzsLSJGqqE_Ugjzwk0";
+const UPLOAD_PRESET = "techbyzaier_unsigned";
+
+// ══════ STATE ══════
+let cu = null;
+let qCount = 0;
+let curAssign = null;
+let stAns = {};
+let selectedFile = null;
+let unsubscribers = [];
+
+// ══════ HIDE LOADING ══════
+setTimeout(() => {
+  document.getElementById('app-loading').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}, 1200);
+
+// ══════ LOGIN ══════
+let lRole = 'student';
+window.switchLoginRole = (r, btn) => {
+  lRole = r;
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active');
+  document.getElementById('student-login-form').style.display = r === 'student' ? 'block' : 'none';
+  document.getElementById('teacher-login-form').style.display = r === 'teacher' ? 'block' : 'none';
+};
+
+window.loginStudent = async () => {
+  const name = document.getElementById('login-name').value.trim();
+  const code = document.getElementById('login-code').value.trim().toUpperCase();
+  const err = document.getElementById('login-error');
+  if (!name) { showErr(err, 'Veuillez entrer votre nom.'); return; }
+  if (!code) { showErr(err, 'Veuillez entrer le code de classe.'); return; }
+
+  // Check class exists
+  const clsSnap = await getDocs(query(collection(db, 'classes'), where('code', '==', code)));
+  if (clsSnap.empty) { showErr(err, `Code "${code}" introuvable.`); return; }
+  err.style.display = 'none';
+
+  // Register or get student
+  const stuQuery = query(collection(db, 'students'), where('name', '==', name), where('classCode', '==', code));
+  const stuSnap = await getDocs(stuQuery);
+  let studentId;
+  if (stuSnap.empty) {
+    const ref = await addDoc(collection(db, 'students'), { name, classCode: code, createdAt: Date.now() });
+    studentId = ref.id;
+  } else {
+    studentId = stuSnap.docs[0].id;
+  }
+
+  cu = { role: 'student', name, classCode: code, studentId };
+  boot();
+};
+
+window.loginTeacher = () => {
+  const pwd = document.getElementById('teacher-password').value;
+  const err = document.getElementById('teacher-error');
+  if (pwd !== 'prof123') { showErr(err, 'Mot de passe incorrect.'); return; }
+  err.style.display = 'none';
+  cu = { role: 'teacher', name: 'Professeur Zaier' };
+  boot();
+};
+
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+
+function boot() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  document.getElementById('header-username').textContent = cu.name;
+  if (cu.role === 'teacher') {
+    document.getElementById('role-tabs-header').style.display = 'flex';
+    document.getElementById('notif-btn').style.display = 'block';
+    switchView('teacher');
+    loadTeacherDashboard();
+    listenNotifications();
+  } else {
+    switchView('student');
+    loadStudentAssignments();
+  }
+}
+
+window.logout = () => {
+  unsubscribers.forEach(u => u());
+  unsubscribers = [];
+  cu = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('teacher-password').value = '';
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-code').value = '';
+};
+
+// ══════ VIEWS ══════
+window.switchView = (v) => {
+  document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  const tabs = document.querySelectorAll('#role-tabs-header .role-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  if (v === 'teacher' && tabs[0]) tabs[0].classList.add('active');
+  if (v === 'leaderboard') { tabs[1] && tabs[1].classList.add('active'); renderLeaderboard(); }
+};
+
+// ══════ TEACHER TABS ══════
+window.switchTeacherTab = (tab, btn) => {
+  document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active');
+  ['tc','ta','tr','tcl'].forEach(t => { document.getElementById(t).style.display = t === tab ? 'block' : 'none'; });
+  if (tab === 'ta') loadAssignmentsList();
+  if (tab === 'tr') loadAllResponses();
+  if (tab === 'tcl') loadClasses();
+};
+
+// ══════ TEACHER DASHBOARD ══════
+async function loadTeacherDashboard() {
+  // Real-time stats
+  const unsub1 = onSnapshot(collection(db, 'assignments'), snap => {
+    document.getElementById('s-videos').textContent = snap.size;
+  });
+  const unsub2 = onSnapshot(collection(db, 'responses'), snap => {
+    document.getElementById('s-responses').textContent = snap.size;
+    if (snap.size > 0) {
+      const scores = snap.docs.map(d => d.data().score);
+      const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+      document.getElementById('s-avg').textContent = avg + '%';
+    }
+  });
+  const unsub3 = onSnapshot(collection(db, 'students'), snap => {
+    document.getElementById('s-students').textContent = snap.size;
+  });
+  unsubscribers.push(unsub1, unsub2, unsub3);
+}
+
+// ══════ CLASSES ══════
+window.createClass = async () => {
+  const name = document.getElementById('class-name').value.trim();
+  const code = document.getElementById('class-code').value.trim().toUpperCase();
+  if (!name || !code) return alert('Remplissez le nom et le code.');
+  const existing = await getDocs(query(collection(db, 'classes'), where('code', '==', code)));
+  if (!existing.empty) return alert('Ce code existe déjà.');
+  await addDoc(collection(db, 'classes'), { name, code, createdAt: Date.now() });
+  document.getElementById('class-name').value = '';
+  document.getElementById('class-code').value = '';
+  loadClasses();
+};
+
+async function loadClasses() {
+  const el = document.getElementById('classes-list'); if (!el) return;
+  const snap = await getDocs(collection(db, 'classes'));
+  const stuSnap = await getDocs(collection(db, 'students'));
+  if (snap.empty) { el.innerHTML = '<p style="color:var(--muted);margin-top:12px">Aucune classe.</p>'; return; }
+  el.innerHTML = snap.docs.map(d => {
+    const c = d.data();
+    const n = stuSnap.docs.filter(s => s.data().classCode === c.code).length;
+    return `<div class="video-item" style="margin-top:9px">
+      <div class="video-thumb">🏫</div>
+      <div class="video-info"><div class="video-title">${c.name}</div>
+      <div class="video-meta">${n} élève(s) · Code : <strong style="color:var(--accent)">${c.code}</strong></div></div>
+      <button class="btn btn-danger btn-sm" onclick="deleteClass('${d.id}')">Supprimer</button>
+    </div>`;
+  }).join('');
+}
+
+window.deleteClass = async (id) => {
+  if (!confirm('Supprimer cette classe ?')) return;
+  await deleteDoc(doc(db, 'classes', id));
+  loadClasses();
+};
+
+// ══════ VIDEO UPLOAD ══════
+window.handleFile = (file) => {
+  if (!file) return;
+  if (file.size > 100 * 1024 * 1024) { alert('Fichier trop lourd (max 100 Mo).'); return; }
+  selectedFile = file;
+  showPreview(file);
+};
+
+function showPreview(file) {
+  document.getElementById('upload-zone').style.display = 'none';
+  const prev = document.getElementById('upload-preview');
+  prev.style.display = 'flex';
+  const size = file.size > 1024 * 1024 ? (file.size / 1024 / 1024).toFixed(1) + ' Mo' : (file.size / 1024).toFixed(0) + ' Ko';
+  prev.innerHTML = `<span style="font-size:1.4rem">🎬</span>
+    <div style="flex:1;min-width:0"><div class="upload-preview-name">${file.name}</div>
+    <div class="upload-preview-size">${size}</div></div>
+    <button class="upload-remove" onclick="clearUpload()">✕</button>`;
+}
+
+window.clearUpload = () => {
+  selectedFile = null;
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('upload-preview').innerHTML = '';
+  document.getElementById('upload-zone').style.display = 'block';
+  document.getElementById('vfile').value = '';
+  document.getElementById('upload-progress-wrap').style.display = 'none';
+};
+
+// ══════ VIDEO SOURCE SWITCHING ══════
+let videoSourceMode = 'upload';
+window.switchVSrc = (mode, btn) => {
+  videoSourceMode = mode;
+  document.querySelectorAll('.vsrc-tab').forEach(t => t.classList.remove('active')); btn.classList.add('active');
+  ['upload','youtube','drive','onedrive'].forEach(m => {
+    const el = document.getElementById('vsrc-'+m);
+    if(el) el.style.display = m === mode ? 'block' : 'none';
+  });
+};
+
+window.dragOver = (e) => { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag'); };
+window.dragLeave = () => { document.getElementById('upload-zone').classList.remove('drag'); };
+window.dropFile = (e) => {
+  e.preventDefault(); document.getElementById('upload-zone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('video/')) window.handleFile(file);
+  else alert('Veuillez déposer un fichier vidéo.');
+};
+
+// ══════ QUESTIONS ══════
+window.addQuestion = () => {
+  qCount++;
+  const id = 'q_' + qCount;
+  const d = document.createElement('div'); d.className = 'qcm-question'; d.id = id;
+  d.innerHTML = `<button class="remove-q" onclick="document.getElementById('${id}').remove()">✕</button>
+    <div class="q-number">QUESTION ${qCount}</div>
+    <input type="text" placeholder="Texte de la question…" class="q-text">
+    <div class="options-grid">${[0,1,2,3].map(i=>`<div class="option-row">
+      <input type="radio" class="correct-radio" name="cr_${id}" value="${i}" title="Bonne réponse">
+      <input type="text" placeholder="Option ${String.fromCharCode(65+i)}" class="opt-input">
+    </div>`).join('')}</div>
+    <div class="correct-hint">🔘 Sélectionnez la bonne réponse</div>`;
+  document.getElementById('questions-list').appendChild(d);
+};
+
+function gatherQs() {
+  return [...document.querySelectorAll('.qcm-question')].map(d => {
+    const text = d.querySelector('.q-text').value.trim();
+    const opts = [...d.querySelectorAll('.opt-input')].map(i => i.value.trim());
+    const cr = d.querySelector('.correct-radio:checked');
+    return { text, opts, correct: cr ? parseInt(cr.value) : 0 };
+  }).filter(q => q.text && q.opts.some(o => o));
+}
+
+// ══════ PUBLISH ══════
+window.publishAssignment = async () => {
+  const title = document.getElementById('assign-title').value.trim();
+  const classCode = document.getElementById('assign-class').value.trim().toUpperCase() || '';
+  const questions = gatherQs();
+  if (!title) return alert('Entrez un titre.');
+  if (!selectedFile) return alert('Veuillez sélectionner une vidéo.');
+  if (!questions.length) return alert('Ajoutez au moins une question.');
+
+  const btn = document.getElementById('publish-btn');
+  btn.disabled = true; btn.textContent = '⏳ Upload en cours…';
+  document.getElementById('upload-progress-wrap').style.display = 'block';
+
+  try {
+    // Upload to Cloudinary via unsigned upload preset
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    formData.append('cloud_name', CLOUD_NAME);
+    formData.append('resource_type', 'video');
+
+    // XHR upload with progress tracking
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, true);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round(e.loaded / e.total * 100);
+        document.getElementById('upload-bar').style.width = pct + '%';
+        document.getElementById('upload-status').textContent = `Upload : ${pct}%`;
+      }
+    };
+
+    xhr.onreadystatechange = async function() {
+      if (xhr.readyState !== 4) return;
+      try {
+        const res = JSON.parse(xhr.responseText);
+        console.log('Cloudinary response:', res);
+        if (res.secure_url) {
+          document.getElementById('upload-status').textContent = 'Sauvegarde…';
+          await saveAssignment(title, res.secure_url, selectedFile.name, classCode, questions);
+          window.clearUpload();
+          btn.disabled = false; btn.textContent = '🚀 Publier le devoir';
+        } else {
+          alert('Erreur Cloudinary : ' + (res.error?.message || JSON.stringify(res)));
+          btn.disabled = false; btn.textContent = '🚀 Publier le devoir';
+        }
+      } catch(e) {
+        alert('Erreur : ' + e.message + '\n' + xhr.responseText);
+        btn.disabled = false; btn.textContent = '🚀 Publier le devoir';
+      }
+    };
+
+    xhr.onerror = () => {
+      alert('Erreur réseau. Vérifiez votre connexion.');
+      btn.disabled = false; btn.textContent = '🚀 Publier le devoir';
+    };
+
+    xhr.send(formData);
+
+  } catch(e) {
+    alert('Erreur : ' + e.message);
+    btn.disabled = false; btn.textContent = '🚀 Publier le devoir';
+  }
+};
+
+async function saveAssignment(title, videoUrl, videoName, classCode, questions) {
+  await addDoc(collection(db, 'assignments'), { title, videoUrl, videoName, classCode, questions, createdAt: Date.now() });
+  document.getElementById('assign-title').value = '';
+  document.getElementById('assign-class').value = '';
+  document.getElementById('questions-list').innerHTML = ''; qCount = 0;
+  document.getElementById('yt-url') && (document.getElementById('yt-url').value = '');
+  document.getElementById('drive-url') && (document.getElementById('drive-url').value = '');
+  document.getElementById('onedrive-url') && (document.getElementById('onedrive-url').value = '');
+  alert(`✅ Devoir "${title}" publié avec succès !`);
+}
+
+// ══════ ASSIGNMENTS LIST ══════
+async function loadAssignmentsList() {
+  const el = document.getElementById('ta-list'); if (!el) return;
+  el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px">Chargement…</div>';
+  const snap = await getDocs(query(collection(db, 'assignments'), orderBy('createdAt', 'desc')));
+  const rSnap = await getDocs(collection(db, 'responses'));
+  if (snap.empty) { el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:36px;border:1px dashed var(--border);border-radius:var(--radius)">Aucun devoir</div>'; return; }
+  el.innerHTML = snap.docs.map(d => {
+    const a = d.data(); const aid = d.id;
+    const rs = rSnap.docs.filter(r => r.data().assignId === aid);
+    const avg = rs.length ? Math.round(rs.reduce((s, r) => s + r.data().score, 0) / rs.length) : null;
+    return `<div class="video-item"><div class="video-thumb">🎬</div>
+      <div class="video-info"><div class="video-title">${a.title}${a.classCode?`<span class="class-tag">${a.classCode}</span>`:''}</div>
+      <div class="video-meta">${a.questions.length} question(s) · ${rs.length} réponse(s)${avg!==null?' · Moy: '+avg+'%':''}</div></div>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-secondary btn-sm" onclick="goToResponses('${aid}')">Réponses</button>
+        <button class="btn btn-danger btn-sm" onclick="delAssign('${aid}','${a.videoName||''}')">✕</button>
+      </div></div>`;
+  }).join('');
+}
+
+window.delAssign = async (id, videoName) => {
+  if (!confirm('Supprimer ce devoir ?')) return;
+  await deleteDoc(doc(db, 'assignments', id));
+  // Delete responses too
+  const rSnap = await getDocs(query(collection(db, 'responses'), where('assignId', '==', id)));
+  for (const r of rSnap.docs) await deleteDoc(r.ref);
+  loadAssignmentsList();
+};
+
+window.goToResponses = (aid) => {
+  switchTeacherTab('tr', document.querySelectorAll('.inner-tab')[2]);
+  loadAllResponses(aid);
+};
+
+// ══════ RESPONSES ══════
+async function loadAllResponses(filterAid) {
+  const el = document.getElementById('tr-container'); if (!el) return;
+  el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:30px">Chargement…</div>';
+  const aSnap = await getDocs(collection(db, 'assignments'));
+  const rSnap = await getDocs(collection(db, 'responses'));
+  const rs = filterAid ? rSnap.docs.filter(r => r.data().assignId === filterAid) : rSnap.docs;
+  if (!rs.length) { el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:36px;border:1px dashed var(--border);border-radius:var(--radius)">Aucune réponse</div>'; return; }
+
+  const byA = {};
+  rs.forEach(r => { const d = r.data(); if (!byA[d.assignId]) byA[d.assignId] = []; byA[d.assignId].push({ id: r.id, ...d }); });
+
+  el.innerHTML = Object.entries(byA).map(([aid, ars]) => {
+    const aDoc = aSnap.docs.find(d => d.id === aid); if (!aDoc) return '';
+    const a = aDoc.data();
+    const rows = ars.map(r => `<tr>
+      <td><strong>${r.studentName}</strong><span class="class-tag" style="font-size:.68rem">${r.classCode||''}</span></td>
+      <td><span class="score-bar"><span class="score-fill" style="width:${r.score}%"></span></span>${r.score}%</td>
+      <td>${r.approved===true?'<span class="badge badge-green">✓ Approuvé</span>':r.approved===false?'<span class="badge badge-red">✗ Refusé</span>':'<span class="badge badge-orange">⏳ En attente</span>'}</td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick='viewDetail(${JSON.stringify(r)},${JSON.stringify(a.questions)})'>Détails</button>
+        <button class="btn btn-primary btn-sm" onclick="approveR('${r.id}',true)">✓</button>
+        <button class="btn btn-danger btn-sm" onclick="approveR('${r.id}',false)">✗</button>
+      </td></tr>`).join('');
+    return `<div style="margin-bottom:22px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:9px;font-size:.92rem">📋 ${a.title}</div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="responses-table"><thead><tr><th>Élève</th><th>Score</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody>${rows}</tbody></table></div></div>`;
+  }).join('');
+}
+
+window.approveR = async (rid, v) => {
+  await updateDoc(doc(db, 'responses', rid), { approved: v });
+  loadAllResponses();
+};
+
+window.viewDetail = (r, questions) => {
+  document.getElementById('modal-ttl').textContent = `📋 ${r.studentName} — ${r.score}%`;
+  document.getElementById('modal-body').innerHTML = questions.map((q, i) => {
+    const sa = r.answers[i]; const ok = sa === q.correct;
+    return `<div class="answer-row"><div>
+      <div style="font-weight:600;margin-bottom:3px">${q.text}</div>
+      <div style="font-size:.77rem;color:var(--muted)">Répondu : ${q.opts[sa]??'—'} | Correct : ${q.opts[q.correct]}</div>
+    </div><span class="${ok?'answer-correct':'answer-wrong'}">${ok?'✓':'✗'}</span></div>`;
+  }).join('');
+  document.getElementById('modal').classList.add('open');
+};
+
+// ══════ NOTIFICATIONS ══════
+function listenNotifications() {
+  const unsub = onSnapshot(
+    query(collection(db, 'notifications'), orderBy('time', 'desc')),
+    (snap) => {
+      const unread = snap.docs.filter(d => !d.data().read).length;
+      const badge = document.getElementById('notif-badge');
+      badge.textContent = unread; badge.style.display = unread > 0 ? 'flex' : 'none';
+      const list = document.getElementById('notif-list');
+      if (!snap.size) { list.innerHTML = '<div class="notif-empty">Aucune notification</div>'; return; }
+      list.innerHTML = snap.docs.map(d => {
+        const n = d.data();
+        return `<div class="notif-item ${n.read?'':'unread'}" onclick="readN('${d.id}')">
+          <div class="notif-dot ${n.read?'read':''}"></div>
+          <div><div>${n.text}</div><div class="notif-time">${ago(n.time)}</div></div>
+        </div>`;
+      }).join('');
+    }
+  );
+  unsubscribers.push(unsub);
+}
+
+window.readN = async (id) => { await updateDoc(doc(db, 'notifications', id), { read: true }); };
+window.markAllRead = async () => {
+  const snap = await getDocs(query(collection(db, 'notifications'), where('read', '==', false)));
+  for (const d of snap.docs) await updateDoc(d.ref, { read: true });
+};
+
+async function pushNotif(text) {
+  await addDoc(collection(db, 'notifications'), { text, time: Date.now(), read: false });
+}
+
+window.toggleNotifications = () => { document.getElementById('notif-panel').classList.toggle('open'); };
+
+function ago(ts) {
+  const d = Math.floor((Date.now() - ts) / 1000);
+  if (d < 60) return 'À l\'instant'; if (d < 3600) return Math.floor(d/60)+'min';
+  if (d < 86400) return Math.floor(d/3600)+'h'; return Math.floor(d/86400)+'j';
+}
+
+// ══════ LEADERBOARD ══════
+async function renderLeaderboard() {
+  const filter = document.getElementById('lb-filter')?.value || '';
+  const el = document.getElementById('lb-list'); if (!el) return;
+
+  const [stuSnap, rSnap, clsSnap] = await Promise.all([
+    getDocs(collection(db, 'students')),
+    getDocs(collection(db, 'responses')),
+    getDocs(collection(db, 'classes'))
+  ]);
+
+  // Update filter options
+  const sel = document.getElementById('lb-filter');
+  if (sel && clsSnap.docs.length) {
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Toutes les classes</option>' +
+      clsSnap.docs.map(d => `<option value="${d.data().code}" ${cur===d.data().code?'selected':''}>${d.data().name}</option>`).join('');
+  }
+
+  let stus = stuSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (filter) stus = stus.filter(s => s.classCode === filter);
+
+  const ranked = stus.map(s => {
+    const rs = rSnap.docs.filter(r => r.data().studentId === s.id);
+    const avg = rs.length ? Math.round(rs.reduce((a, r) => a + r.data().score, 0) / rs.length) : null;
+    const cls = clsSnap.docs.find(c => c.data().code === s.classCode);
+    return { ...s, avg, className: cls?.data().name || s.classCode, count: rs.length };
+  }).filter(s => s.avg !== null).sort((a, b) => b.avg - a.avg);
+
+  if (!ranked.length) { el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:36px">Aucune donnée</div>'; return; }
+  const maxA = ranked[0].avg;
+  el.innerHTML = ranked.map((s, i) => {
+    const rc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    const ini = s.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    return `<div class="leaderboard-row">
+      <div class="rank-num ${rc}">${medal||'#'+(i+1)}</div>
+      <div class="lb-avatar">${ini}</div>
+      <div style="flex:1"><div class="lb-name">${s.name}</div><div class="lb-class">${s.className} · ${s.count} devoir(s)</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="lb-bar"><div class="lb-bar-fill" style="width:${Math.round(s.avg/maxA*100)}%"></div></div>
+        <div class="lb-score">${s.avg}%</div>
+      </div></div>`;
+  }).join('');
+}
+window.renderLeaderboard = renderLeaderboard;
+
+// ══════ STUDENT ══════
+async function loadStudentAssignments() {
+  document.getElementById('student-home').style.display = 'block';
+  document.getElementById('student-quiz-area').style.display = 'none';
+  document.getElementById('student-success').style.display = 'none';
+  const el = document.getElementById('student-list');
+
+  const [aSnap, rSnap] = await Promise.all([
+    getDocs(query(collection(db, 'assignments'), orderBy('createdAt', 'desc'))),
+    getDocs(query(collection(db, 'responses'), where('studentId', '==', cu.studentId)))
+  ]);
+
+  const mine = aSnap.docs.filter(d => !d.data().classCode || d.data().classCode === cu.classCode);
+  if (!mine.length) { el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:36px;border:1px dashed var(--border);border-radius:var(--radius)">Aucun devoir disponible</div>'; return; }
+
+  el.innerHTML = mine.map(d => {
+    const a = d.data(); const aid = d.id;
+    const done = rSnap.docs.some(r => r.data().assignId === aid);
+    const mr = rSnap.docs.find(r => r.data().assignId === aid)?.data();
+    const badge = mr ? (mr.approved===true?'<span class="badge badge-green">✓ Approuvé</span>':mr.approved===false?'<span class="badge badge-red">✗ Refusé</span>':`<span class="badge badge-blue">Score: ${mr.score}%</span>`) : '';
+    return `<div class="video-item"><div class="video-thumb">🎬</div>
+      <div class="video-info"><div class="video-title">${a.title}</div>
+      <div class="video-meta">${a.questions.length} question(s) ${badge}</div></div>
+      ${done?'<span class="badge badge-green" style="flex-shrink:0">✓ Complété</span>':
+        `<button class="btn btn-primary btn-sm" onclick="startQuiz('${aid}')">Commencer</button>`}
+    </div>`;
+  }).join('');
+}
+
+window.startQuiz = async (aid) => {
+  const aDoc = await getDoc(doc(db, 'assignments', aid));
+  curAssign = { id: aid, ...aDoc.data() }; stAns = {};
+  document.getElementById('student-home').style.display = 'none';
+  document.getElementById('student-quiz-area').style.display = 'block';
+  document.getElementById('quiz-ttl').textContent = curAssign.title;
+  const vurl = curAssign.videoUrl || '';
+  let videoHtml = '';
+  if (!vurl) {
+    videoHtml = `<div class="video-placeholder"><div class="play-icon">▶</div><p>Aucune vidéo</p></div>`;
+  } else if (curAssign.videoName === 'youtube' || vurl.includes('youtube.com/embed')) {
+    videoHtml = `<iframe src="${vurl}" allowfullscreen style="width:100%;height:100%;border:none"></iframe>`;
+  } else if (curAssign.videoName === 'googledrive' || vurl.includes('drive.google.com')) {
+    videoHtml = `<iframe src="${vurl}" allowfullscreen style="width:100%;height:100%;border:none"></iframe>`;
+  } else if (curAssign.videoName === 'onedrive' || vurl.includes('onedrive')) {
+    videoHtml = `<iframe src="${vurl}" allowfullscreen style="width:100%;height:100%;border:none"></iframe>`;
+  } else {
+    videoHtml = `<video controls src="${vurl}" style="width:100%;height:100%"></video>`;
+  }
+  document.getElementById('video-box').innerHTML = videoHtml;
+  renderQuizQs();
+};
+
+function renderQuizQs() {
+  document.getElementById('quiz-qs').innerHTML = curAssign.questions.map((q, qi) => `
+    <div class="qcm-quiz-q" id="qq-${qi}">
+      <div class="quiz-q-text">Q${qi+1}. ${q.text}</div>
+      <div class="quiz-options">${q.opts.map((o, oi) => `
+        <label class="quiz-option" id="op-${qi}-${oi}" onclick="selOpt(${qi},${oi})">
+          <div class="option-dot"></div>${o||'Option '+String.fromCharCode(65+oi)}
+        </label>`).join('')}
+      </div></div>`).join('');
+  updProg();
+}
+
+window.selOpt = (qi, oi) => {
+  stAns[qi] = oi;
+  curAssign.questions[qi].opts.forEach((_, i) => { document.getElementById(`op-${qi}-${i}`)?.classList.toggle('selected', i===oi); });
+  document.getElementById(`qq-${qi}`)?.classList.add('answered');
+  updProg();
+};
+
+function updProg() {
+  const t = curAssign.questions.length, a = Object.keys(stAns).length;
+  document.getElementById('quiz-prog-bar').style.width = Math.round(a/t*100) + '%';
+  document.getElementById('quiz-prog-lbl').textContent = `${a}/${t} répondues`;
+}
+
+window.submitQuiz = async () => {
+  const t = curAssign.questions.length, a = Object.keys(stAns).length;
+  if (a < t && !confirm(`${a}/${t} questions répondues. Soumettre quand même ?`)) return;
+  let ok = 0;
+  curAssign.questions.forEach((q, i) => { if (stAns[i] === q.correct) ok++; });
+  const score = Math.round(ok / t * 100);
+  await addDoc(collection(db, 'responses'), {
+    assignId: curAssign.id, studentId: cu.studentId, studentName: cu.name,
+    classCode: cu.classCode, answers: curAssign.questions.map((_, i) => stAns[i] ?? -1),
+    score, approved: null, time: Date.now()
+  });
+  await pushNotif(`${cu.name} a soumis "${curAssign.title}" — Score : ${score}%`);
+  document.getElementById('student-quiz-area').style.display = 'none';
+  document.getElementById('student-success').style.display = 'block';
+  document.getElementById('suc-score').textContent = score + '%';
+};
+
+window.backToStudentHome = () => { loadStudentAssignments(); };
+
+// Close notif panel on outside click
+document.addEventListener('click', e => {
+  const p = document.getElementById('notif-panel'), b = document.getElementById('notif-btn');
+  if (p?.classList.contains('open') && !p.contains(e.target) && e.target !== b && !b?.contains(e.target)) p.classList.remove('open');
+});
+
+</script>
+</body>
+</html>
